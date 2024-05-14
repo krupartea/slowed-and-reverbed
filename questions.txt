@@ -1,0 +1,5 @@
+? If a message is fine with multiple message handlers' conditions,
+what is the behavior of the bot? How it manages the priority of handler?
+
+? Exception handling: what exact exceptions does infinity_polling function
+handles? Does it handle my Python code's errors?

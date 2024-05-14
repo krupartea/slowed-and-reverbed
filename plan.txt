@@ -1,0 +1,6 @@
+1. Make a working LOCAL telegram bot.
+- Echo bot
+1.5. Learn decorators.
+2. Audio processing.
+3. Local slowed and reverbed functionality.
+4. Hosting the thing.
