@@ -4,6 +4,7 @@
 - (optionally) see message hanlers decorater work under the hood
 2. Audio processing.
 3. Local slowed and reverbed functionality.
+3.5. Add UI.
 4. Hosting the thing.
 
 
