@@ -1,6 +1,22 @@
 1. Make a working LOCAL telegram bot.
 - Echo bot
 1.5. Learn decorators.
+- (optionally) see message hanlers decorater work under the hood
 2. Audio processing.
 3. Local slowed and reverbed functionality.
 4. Hosting the thing.
+
+
+OPTIONAL
+
+
+
+
+
+___
+Send AudioFile over telebot
+attemps:
+1. write a file DONE
+2. write a file with the format stated explicitly: FAILED
+3. Virutual file. Error code: 400. Empty file
+___

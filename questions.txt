@@ -1,5 +1,43 @@
 ? If a message is fine with multiple message handlers' conditions,
 what is the behavior of the bot? How it manages the priority of handler?
+ANSWER: If a bot user sends a message that passes some condition of some
+message handler --- the function which was defined first in the bot's
+code is called. All the other functions are ignore.
+For example, if the first message handling function defined,
+accepts all the messages (i.e. `func=lambda message: True`) 
 
 ? Exception handling: what exact exceptions does infinity_polling function
 handles? Does it handle my Python code's errors?
+
+? How document type vs audio type not overlap... or do they?
+
+! Message handling function are not tied only to Telegram-related
+operations. It's possible to put any logic inside of such function. The
+Telegram-related stuff happend thanks to `message_handler` decorator,
+and nothing stops us from doing something besides the Telegram-related
+stuff.
+For example, we can store and process the messages, their content, store
+it locally. We can create a bot which turns off the light at our home,
+when somobody (any user) sends a message containing the word "hello".
+
+! "Message handling function" term which I used above, is excessively
+verbose. It's just a "Message handler", according to:
+https://pypi.org/project/pyTelegramBotAPI/
+
+! A message object, thing which is provided to the message handlers, is
+not (only) the message content. It contains the message's
+metadata such as messages unique identifier, or user's identifier etc.
+
+
+? What if I provide no arguments to the handler decorator? Does it mean
+that any message will make this handler eligible to process it?
+ANSWER: there no short answer. But filter will be set to a default
+Telebot state, for example, text messages only, but every text message.
+
+! If text is send along with file, it can be accessed NOT by m.text
+field, but by caption.
+
+? I have a sequence of bytes (<class 'bytes'>). Which represent an mp3-
+file. How do efficiently turn it into a NumPy array?
+
+? In AudioFile, how audio is actually stored?
