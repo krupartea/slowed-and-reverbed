@@ -41,3 +41,10 @@ field, but by caption.
 file. How do efficiently turn it into a NumPy array?
 
 ? In AudioFile, how audio is actually stored?
+
+? Is correct that all the actions that a user can make with a bot fall
+under the umbrella of sending a message?
+
+! The fact that it's possible (and happends by default) that one user
+can mess up other's control flow position, potentially can be used as an
+interesting feature.

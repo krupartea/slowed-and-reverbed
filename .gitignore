@@ -1,3 +1,5 @@
 PRIVACY.py
 __pycache__/
 *.mp3
+message_log.csv
+message_pickles/

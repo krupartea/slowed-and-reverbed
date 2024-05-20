@@ -5,6 +5,10 @@
 2. Audio processing.
 3. Local slowed and reverbed functionality.
 3.5. Add UI.
+- Control the stretch factor
+- Control the amount of reverb
+3.6. Multiple formats support 
+
 4. Hosting the thing.
 
 
@@ -20,4 +24,15 @@ attemps:
 1. write a file DONE
 2. write a file with the format stated explicitly: FAILED
 3. Virutual file. Error code: 400. Empty file
+___
+
+
+___
+Control flow 
+
+Create a datebase NO
+Endlessly log to a huge .json file, via appending message objects to it.
+This is effective a history, which allows to determine the position of a user
+in the control flow, because message objects contain user's id and all the
+action, baked into the message's metadata.
 ___
