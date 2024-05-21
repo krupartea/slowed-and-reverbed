@@ -8,6 +8,7 @@ from telebot import types
 import pickle
 from pathlib import Path
 import os
+from audio_processing import slow_and_reverb
 
 
 MESSAGE_PICKLES_DIR = Path(r"message_pickles")
@@ -25,6 +26,19 @@ bot = telebot.TeleBot(TG_TOKEN, parse_mode=None)
 message_log = open(LOG_PATH, "a")
 
 
+# create the user-state dict
+# TODO: store on the drive
+# keys: user_id, values: user_state (control flow state)
+user_state = {}
+# POSSIBLE STATES: "default", "setting_stretch", "setting_reverb", "advanced"
+
+
+def infer_user_state(message):
+    # returns user state
+    pass
+
+
+
 @bot.middleware_handler(update_types=['message'])
 def pickle_message(bot_instance, message):
     path = MESSAGE_PICKLES_DIR / f"id{message.id}_userid{message.from_user.id}_date{message.date}.pickle"
@@ -37,22 +51,35 @@ def pickle_message(bot_instance, message):
     os.fsync(message_log.fileno())
 
 
+
+@bot.middleware_handler(update_types=['message'])
+def new_user(bot_instance, message):
+    if message.from_user.id not in user_state:  # new user case
+        user_state[message.from_user.id] = "default"
+        welcome(message)
+
+
 @bot.message_handler(commands=["start"])
 def welcome(message):
     bot.reply_to(message, "Welcome to the Slowed and Reverbed world!\nSend an .mp3 file to get its improved version ;)")
 
 
-@bot.message_handler(content_types=["audio"])
+@bot.message_handler(commands=["default", "advanced"])
+def set_mode(message):
+    user_state[message.from_user.id] = message.text[1:]
+    if message.text[1:] == "advanced":
+        bot.send_message(message, "In the advanced mode you can set a custom stretching factor and the amount of reverberation.\nBut first, send the .mp3 file.")
+    else:
+        bot.send_message(message, "In the default mode just send the .mp3 file to get its better version ;)")
+
+
+
+@bot.message_handler(content_types=["audio"],
+                     func=lambda m: user_state[m.from_user.id] in ["default", "advanced"])
 def process_audio(message):
-
-    # Make a Pedalboard object, containing multiple audio plugins:
-    board = Pedalboard([Reverb(room_size=0.25)])
-
     file_info = bot.get_file(message.audio.file_id)
-    bytes = bot.download_file(file_info.file_path)
-    file_alike = io.BytesIO()  # TODO: rename io.BytesIO-related stuff
-    file_alike.write(bytes)
-    file_alike.seek(0)  # now f is feedable to Pedalboard's AudioFile
+    audio_bytes = bot.download_file(file_info.file_path)
+
 
     # TODO: check if the file is valid (e.g. if the maximum sendable filesize
     # is not exceeded)
@@ -60,30 +87,11 @@ def process_audio(message):
 
     # set slowing and reverberation parameters
 
-
-    with AudioFile(file_alike, "r") as ain:
-        buffer = io.BytesIO()
-        with AudioFile(buffer, "w", ain.samplerate, ain.num_channels, format="mp3") as aout:
-            # read one second of audio at a time, until the file is empty:
-            while ain.tell() < ain.frames:
-                chunk = ain.read(ain.samplerate)
-
-                # slow down
-                # TODO: research on a time stretching which doesn't compesnate
-                # pitch implicitly
-                chunk = pedalboard.time_stretch(chunk, ain.samplerate, 0.8)
-                
-                # reverberate
-                effected = board(chunk, ain.samplerate, reset=False)
-                
-                # write the output to our output file:
-                aout.write(effected)
-        pedalboard.io.StreamResampler
-        
-        buffer.seek(0)
-        bot.send_audio(message.chat.id, telebot.types.InputFile(buffer))
-
-    file_alike.close()   
+    if user_state[message.from_user.id] == "default":
+        output_buffer = slow_and_reverb(audio_bytes)
+        bot.send_audio(message.chat.id, telebot.types.InputFile(output_buffer))
+    else:
+        pass
 
 
 bot.infinity_polling()
