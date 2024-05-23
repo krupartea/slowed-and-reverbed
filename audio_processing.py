@@ -4,7 +4,7 @@ import io
 import pedalboard
 
 
-def slow_and_reverb(audio_bytes, reverb_level=5, slow_factor=5):
+def slow_and_reverb(audio_bytes, slow_factor=5, reverb_level=5):
     # TODO: actully change params wrt provided ones
 
     board = Pedalboard([Reverb(room_size=0.25)])
