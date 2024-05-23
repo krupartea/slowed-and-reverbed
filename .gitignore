@@ -4,3 +4,4 @@ __pycache__/
 message_log.csv
 message_pickles/
 messages/
+*.json

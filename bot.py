@@ -9,53 +9,34 @@ import pickle
 from pathlib import Path
 import os
 from audio_processing import slow_and_reverb
+import json
 
 
-MESSAGE_PICKLES_DIR = Path(r"message_pickles")
-LOG_PATH = Path(r"message_log.csv")
+MESSAGE_PICKLES_DIR = Path(r"messages")
+USER_INFO_PATH = Path(r"user_info.json")
 
 
+# enable middleware handlers
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 
-
+# create bot instance
 bot = telebot.TeleBot(TG_TOKEN, parse_mode=None)
 
-
-# read the log file
-# columns are: message_id,user_id,timestamp,pickle_path
-message_log = open(LOG_PATH, "a")
-
-
-# create the user-info dict
-# TODO: store on the drive
-# dictionary structure:
-# {
-#     "user_id":{
-#         "mode": "default",
-#         "stage": "home",
-#     }
-# }
-user_info = {}
-# POSSIBLE STATES: "default", "setting_stretch", "setting_reverb", "advanced"
-
-
-def infer_user_state(message):
-    # returns user state
-    pass
-
+# load users info
+with USER_INFO_PATH.open() as f:
+    user_info = json.load(f)
 
 
 @bot.middleware_handler(update_types=['message'])
 def pickle_message(bot_instance, message):
-    path = MESSAGE_PICKLES_DIR / f"id{message.id}_userid{message.from_user.id}_date{message.date}.pickle"
+    # create a user's directory if it doesn't exist (new user case)
+    user_dir = MESSAGE_PICKLES_DIR / str(message.from_user.id)
+    if not user_dir.exists():
+        user_dir.mkdir()
+    # store the message to the users directory
+    path = user_dir / f"{message.id}.pickle"
     with open(path, "wb") as f:
         pickle.dump(message, f)
-    
-    # log a subset of message attributes to a .csv file
-    message_log.write(f"{message.id},{message.from_user.id},{message.date},{path}\n")
-    message_log.flush()  # moves (flushes) the runtime file buffer to OS
-    os.fsync(message_log.fileno())
-
 
 
 @bot.middleware_handler(update_types=['message'])
@@ -66,13 +47,15 @@ def new_user(bot_instance, message):
             "slowing": 0.9,
             "reverb": 0.25,
         }
-        welcome(message)
+    # update user_info.json on the drive
+    with USER_INFO_PATH.open("w") as f:
+        json.dump(user_info, f)
+        os.fsync(f.fileno())
 
 
 @bot.message_handler(commands=["start"])
 def welcome(message):
     bot.reply_to(message, "Welcome to the Slowed and Reverbed world!\nSend an .mp3 file to get its improved version ;)")
-
 
 
 @bot.message_handler(
@@ -106,7 +89,7 @@ def prompt_slowing_change(message):
         types.KeyboardButton(r'25%'),
         types.KeyboardButton(r'50%'),
     )
-    bot.send_message(message, "Select how much to slow down the audio",
+    bot.send_message(message.chat.id, "Select how much to slow down the audio",
                         reply_markup=markup)
 @bot.message_handler(
         content_types=["text"],
@@ -114,8 +97,16 @@ def prompt_slowing_change(message):
 )
 def set_slowing(message):
     user_info[message.from_user.id]["slowing"] = (100 - int(message.text[:-1])) / 100
-    bot.send_message(message, "Slowing rate was updated")
     user_info[message.from_user.id]["stage"] = "home"
+
+    # update user_info.json on the drive
+    with USER_INFO_PATH.open("w") as f:
+        json.dump(user_info, f)
+        os.fsync(f.fileno())
+
+    markup = types.ReplyKeyboardRemove(selective=False)
+    bot.send_message(message.chat.id, "Slowing rate was updated",
+                     reply_markup=markup)
 
 
 @bot.message_handler(commands=["set_slowing"])
@@ -129,7 +120,7 @@ def prompt_reverb_change(message):
         types.KeyboardButton(r'20%'),
         types.KeyboardButton(r'90%'),
     )
-    bot.send_message(message, "Select how much reverb do you want?",
+    bot.send_message(message.chat.id, "Select how much reverb do you want?",
                         reply_markup=markup)
 @bot.message_handler(
         content_types=["text"],
@@ -137,9 +128,16 @@ def prompt_reverb_change(message):
 )
 def set_reverb(message):
     user_info[message.from_user.id]["reverb"] = (100 - int(message.text[:-1])) / 100
-    bot.send_message(message, "Reverb amount was updated")
     user_info[message.from_user.id]["stage"] = "home"
+
+    # update user_info.json on the drive
+    with USER_INFO_PATH.open("w") as f:
+        json.dump(user_info, f)
+        os.fsync(f.fileno())
+
+    markup = types.ReplyKeyboardRemove(selective=False)
+    bot.send_message(message.chat.id, "Reverb amount was updated",
+                     reply_markup=markup)
     
 
 bot.infinity_polling()
-message_log.close()

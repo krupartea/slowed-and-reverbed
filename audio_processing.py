@@ -4,8 +4,8 @@ import io
 import pedalboard
 
 
-def slow_and_reverb(audio_bytes, slow_factor=5, reverb_level=5):
-    # TODO: actully change params wrt provided ones
+def slow_and_reverb(audio_bytes, slow_factor=0.8, reverb_level=5):
+    # TODO: actully change reverb params wrt provided one
 
     board = Pedalboard([Reverb(room_size=0.25)])
 
@@ -23,7 +23,7 @@ def slow_and_reverb(audio_bytes, slow_factor=5, reverb_level=5):
                 # slow down
                 # TODO: research on a time stretching which doesn't compesnate
                 # pitch implicitly
-                chunk = pedalboard.time_stretch(chunk, ain.samplerate, 0.8)
+                chunk = pedalboard.time_stretch(chunk, ain.samplerate, slow_factor)
                 
                 # reverberate
                 effected = board(chunk, ain.samplerate, reset=False)
