@@ -1,15 +1,17 @@
 import telebot
-from PRIVACY import TG_TOKEN
-from pedalboard import Pedalboard, Reverb, time_stretch
-from pedalboard.io import AudioFile
-import io
-import pedalboard
-from telebot import types
 import pickle
 from pathlib import Path
 import os
 from audio_processing import slow_and_reverb
 import json
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("token")
+
+args = parser.parse_args()
+
 
 
 MESSAGE_PICKLES_DIR = Path(r"messages")
@@ -19,8 +21,8 @@ USER_INFO_PATH = Path(r"user_info.json")
 # enable middleware handlers
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 
-# create bot instance
-bot = telebot.TeleBot(TG_TOKEN, parse_mode=None)
+# create a bot instance
+bot = telebot.TeleBot(args.token, parse_mode=None)
 
 # load users info
 with USER_INFO_PATH.open() as f:
@@ -75,7 +77,7 @@ def process_audio(message):
         user_info[message.from_user.id]["slowing"],
         user_info[message.from_user.id]["reverb"],
     )
-    bot.send_audio(message.chat.id, telebot.types.InputFile(output_buffer))
+    bot.send_audio(message.chat.id, telebot.telebot.types.InputFile(output_buffer))
 
 
 @bot.message_handler(commands=["set_slowing"])
@@ -83,11 +85,11 @@ def prompt_slowing_change(message):
     user_info[message.from_user.id]["stage"] = "selecting_slowing"
 
     # construct the keyboard with valid slowing options
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add(
-        types.KeyboardButton(r'10%'),
-        types.KeyboardButton(r'25%'),
-        types.KeyboardButton(r'50%'),
+        telebot.types.KeyboardButton(r'10%'),
+        telebot.types.KeyboardButton(r'25%'),
+        telebot.types.KeyboardButton(r'50%'),
     )
     bot.send_message(message.chat.id, "Select how much to slow down the audio",
                         reply_markup=markup)
@@ -104,7 +106,7 @@ def set_slowing(message):
         json.dump(user_info, f)
         os.fsync(f.fileno())
 
-    markup = types.ReplyKeyboardRemove(selective=False)
+    markup = telebot.types.ReplyKeyboardRemove(selective=False)
     bot.send_message(message.chat.id, "Slowing rate was updated",
                      reply_markup=markup)
 
@@ -114,11 +116,11 @@ def prompt_reverb_change(message):
     user_info[message.from_user.id]["stage"] = "selecting_slowing"
 
     # construct the keyboard with valid slowing options
-    markup = types.ReplyKeyboardMarkup()
+    markup = telebot.types.ReplyKeyboardMarkup()
     markup.add(
-        types.KeyboardButton(r'15%'),
-        types.KeyboardButton(r'20%'),
-        types.KeyboardButton(r'90%'),
+        telebot.types.KeyboardButton(r'15%'),
+        telebot.types.KeyboardButton(r'20%'),
+        telebot.types.KeyboardButton(r'90%'),
     )
     bot.send_message(message.chat.id, "Select how much reverb do you want?",
                         reply_markup=markup)
@@ -135,7 +137,7 @@ def set_reverb(message):
         json.dump(user_info, f)
         os.fsync(f.fileno())
 
-    markup = types.ReplyKeyboardRemove(selective=False)
+    markup = telebot.types.ReplyKeyboardRemove(selective=False)
     bot.send_message(message.chat.id, "Reverb amount was updated",
                      reply_markup=markup)
     
