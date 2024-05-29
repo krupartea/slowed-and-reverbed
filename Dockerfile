@@ -5,11 +5,11 @@ WORKDIR /usr/app
 ADD environment.yml environment.yml
 ADD bot.py bot.py
 ADD audio_processing.py audio_processing.py
-ADD init.sh init.sh
 
 RUN conda env create --name slorev --file environment.yml
 
-RUN /bin/bash init.sh
+# to mount a volume there
+RUN mkdir data
 
 # for a more robust way to utilize Conda in Docker, read:
 # https://pythonspeed.com/articles/activate-conda-dockerfile/

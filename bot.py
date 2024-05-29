@@ -7,22 +7,53 @@ import json
 import argparse
 
 
+# set up the working directory
+DATA_DIR = Path(r"data")
+MESSAGES_DIR = DATA_DIR / r"messages"
+USER_INFO_PATH = DATA_DIR / r"user_info.json"
+
+# create the `data` folder if it isn't there already
+if DATA_DIR.exists():
+    print("`data` folder already exists")
+else:
+    DATA_DIR.mkdir()
+    print("`data` folder created")
+
+# same for `messages`...
+if MESSAGES_DIR.exists():
+    print("`messages` folder already exists")
+else:
+    MESSAGES_DIR.mkdir()
+    print("`messages` folder created")
+
+# ... and for `user_info.json`
+if USER_INFO_PATH.exists():
+    print("`user_info.json` file already exists")
+else:
+    USER_INFO_PATH.touch()
+    # write "{}" to, so it is of a proper .json format
+    with USER_INFO_PATH.open("w") as f:
+        f.write(r"{}")
+        f.flush()
+        os.fsync(f.fileno())
+    print("`user_info.json` file created")
+
+
+# to run this script from the command line, a TOKEN from https://t.me/BotFather
+# must be provided as an agrument
+# parse it
 parser = argparse.ArgumentParser()
 parser.add_argument("token")
 
 args = parser.parse_args()
 
 
-
-MESSAGE_PICKLES_DIR = Path(r"messages")
-USER_INFO_PATH = Path(r"user_info.json")
-
-
-# enable middleware handlers
+# enable middleware handlers (funcs to process messages before handlers)
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 
 # create a bot instance
 bot = telebot.TeleBot(args.token, parse_mode=None)
+
 
 # load users info
 with USER_INFO_PATH.open() as f:
@@ -32,7 +63,7 @@ with USER_INFO_PATH.open() as f:
 @bot.middleware_handler(update_types=['message'])
 def pickle_message(bot_instance, message):
     # create a user's directory if it doesn't exist (new user case)
-    user_dir = MESSAGE_PICKLES_DIR / str(message.from_user.id)
+    user_dir = MESSAGES_DIR / str(message.from_user.id)
     if not user_dir.exists():
         user_dir.mkdir()
     # store the message to the users directory
